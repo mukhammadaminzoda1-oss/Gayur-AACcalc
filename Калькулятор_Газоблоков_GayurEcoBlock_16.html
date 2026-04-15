@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Газоблок">
+<meta name="theme-color" content="#1A3A5C">
+<title>Калькулятор газоблоков — Gayur EcoBlock v4</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --navy:#1A3A5C;--blue:#2E6DA4;--lblue:#EBF3FB;
+  --green:#1A6B3A;--lgreen:#D5F0DC;
+  --red:#C0392B;--lred:#FDECEA;
+  --grey:#F0F3F6;--dgrey:#6B7280;--border:#DDE3EA;
+  --text:#1A1A2E;--r:12px;--sh:0 2px 12px rgba(0,0,0,.08);
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F3F6F9;color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+.hdr{background:var(--navy);padding-top:env(safe-area-inset-top,0px);position:relative}
+.hdr-inner{padding:1rem 1rem .75rem;text-align:center}
+.lang-bar{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;display:flex;gap:4px}
+.lb{padding:5px 12px;border-radius:16px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.lb.on{background:rgba(255,255,255,.2);border-color:#fff;color:#fff}
+
+/* IOS HINT */
+.ios-hint{display:none;background:#0D2137;padding:.6rem 1rem;text-align:center;font-size:12px;color:rgba(255,255,255,.7);line-height:1.4}
+.ios-hint.show{display:block}
+.ios-hint-close{float:right;background:none;border:none;color:rgba(255,255,255,.5);font-size:16px;cursor:pointer;line-height:1;padding:0 0 0 8px}
+
+/* LAYOUT */
+.wrap{max-width:600px;margin:0 auto;padding:.75rem .75rem calc(env(safe-area-inset-bottom,0px) + 3rem)}
+
+/* SECTION */
+.sec{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:.75rem}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:.85rem 1rem;background:var(--navy);cursor:pointer;min-height:52px;-webkit-user-select:none;user-select:none}
+.sec-hdr:active{background:#22456E}
+.sec-num{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.sec-icon{font-size:18px;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:600;color:#fff;flex:1;line-height:1.2}
+.sec-arr{font-size:11px;color:rgba(255,255,255,.4);flex-shrink:0;transition:transform .25s}
+.sec-arr.open{transform:rotate(180deg)}
+.sec-body{padding:.9rem .85rem;display:none}
+.sec-body.open{display:block}
+
+/* FIELDS */
+.fgrid{display:flex;flex-direction:column;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;font-weight:600;color:var(--dgrey);line-height:1.3}
+.iw{display:flex;border-radius:8px;overflow:hidden;border:1.5px solid var(--border);background:var(--lblue);transition:border-color .15s}
+.iw:focus-within{border-color:var(--blue)}
+.iw input{flex:1;padding:.7rem .65rem;border:none;background:transparent;font-size:16px;font-weight:600;color:var(--navy);font-family:inherit;min-width:0;outline:none;-webkit-appearance:none}
+.iw input::placeholder{color:#B0BEC5;font-weight:400;font-size:14px}
+.iw .u{padding:.7rem .6rem;background:rgba(0,0,0,.04);font-size:12px;font-weight:600;color:var(--dgrey);border-left:1px solid var(--border);white-space:nowrap;display:flex;align-items:center;min-width:fit-content}
+.iw.locked{background:var(--grey)}
+.iw.locked input{color:#94A3B8}
+.hint{font-size:11px;color:#94A3B8;margin-top:2px}
+.badge{display:inline-block;background:var(--lblue);color:var(--blue);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px;vertical-align:middle}
+
+/* NOTE */
+.note{border-radius:7px;padding:.6rem .85rem;font-size:12px;line-height:1.5;margin-bottom:.75rem;border-left:3px solid}
+.note.blue{background:var(--lblue);border-color:var(--blue);color:#1A3A5C}
+.note.red{background:var(--lred);border-color:var(--red);color:#7B1A12}
+.note.green{background:var(--lgreen);border-color:var(--green);color:#0D3B1F}
+.note.orange{background:#FEF5EC;border-color:#E67E22;color:#7A3A00}
+
+/* PRESETS */
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem}
+.preset{padding:6px 12px;border-radius:16px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--dgrey);cursor:pointer;min-height:34px;display:flex;align-items:center}
+.preset.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* MODE TABS */
+.tabs{display:flex;flex-direction:row;gap:6px;margin-bottom:.75rem}
+.tab{padding:.7rem .5rem;border-radius:8px;border:2px solid var(--border);background:#fff;font-size:12px;font-weight:700;color:var(--dgrey);cursor:pointer;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;line-height:1.2}
+.tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* OPENINGS TABLE */
+.ot{width:100%;border-collapse:collapse;margin:.5rem 0}
+.ot th{font-size:10px;font-weight:700;color:var(--dgrey);text-align:center;padding:.4rem .3rem;background:var(--grey);border:1px solid var(--border)}
+.ot td{padding:.3rem .25rem;border:1px solid var(--border);vertical-align:middle}
+.ot td:first-child{font-size:11px;color:var(--dgrey);background:var(--grey);text-align:center;white-space:nowrap}
+.ot input{width:100%;border:none;background:var(--lblue);padding:.4rem .35rem;border-radius:5px;font-size:16px;font-weight:600;color:var(--navy);font-family:inherit;outline:none;text-align:center;-webkit-appearance:none;min-height:36px}
+.ot .area-cell{font-size:12px;font-weight:700;color:var(--navy);text-align:center;min-width:55px}
+.del{background:none;border:none;cursor:pointer;color:#CBD5E1;font-size:18px;width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.del:active{color:var(--red);background:var(--lred)}
+.add-btn{margin-top:.6rem;font-size:13px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:.5rem 0;display:flex;align-items:center;gap:5px;min-height:44px;font-family:inherit}
+
+/* STAT ROW */
+.stat-row{padding:.6rem .85rem;border-radius:8px;font-size:13px;font-weight:700;margin-top:.5rem}
+.stat-row.green{background:var(--lgreen);color:var(--green)}
+.stat-row.red{background:var(--lred);color:var(--red)}
+
+/* SLIDER */
+.slider-wrap{display:flex;align-items:center;gap:10px;margin-top:.25rem}
+.slider-wrap input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--border);outline:none;cursor:pointer}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.2);cursor:pointer}
+.slider-val{font-size:18px;font-weight:800;color:var(--navy);min-width:44px;text-align:right}
+
+/* CALC BUTTON */
+.go-btn{width:100%;padding:1rem;border:none;border-radius:var(--r);background:var(--green);color:#fff;font-size:17px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:1rem;letter-spacing:.01em;min-height:54px;-webkit-appearance:none}
+.go-btn:active{opacity:.85}
+
+/* RESULTS */
+.results{display:none;margin-top:.75rem}
+.results.show{display:block}
+.res-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:.75rem}
+.rc{background:var(--navy);border-radius:var(--r);padding:.85rem 1rem;display:flex;align-items:center;gap:1rem}
+.rc.g{background:var(--green)}
+.rc-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.04em;text-transform:uppercase;margin-bottom:.2rem}
+.rc-val{font-size:36px;font-weight:800;color:#fff;line-height:1;margin-bottom:.15rem}
+.rc-unit{font-size:12px;color:rgba(255,255,255,.5)}
+.rc-sub{margin-top:.35rem;font-size:11px;color:rgba(255,255,255,.75);line-height:1.3}
+.rc-icon{font-size:28px;flex-shrink:0}
+.rc-info{flex:1}
+
+.dtbl{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.dtbl table{width:100%;border-collapse:collapse;font-size:12px}
+.dtbl th{background:var(--grey);font-size:10px;font-weight:700;color:var(--dgrey);padding:.45rem .7rem;text-align:left;letter-spacing:.04em;text-transform:uppercase}
+.dtbl td{padding:.5rem .7rem;border-top:1px solid var(--border);color:var(--text);line-height:1.3}
+.dtbl td:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.dtbl tr.sub td{background:var(--grey);font-weight:700;color:var(--navy)}
+.dtbl tr.tot td{background:var(--lgreen);color:var(--green);font-weight:800;font-size:13px}
+
+.cost-box{margin-top:.75rem;background:var(--green);border-radius:var(--r);padding:1.1rem;text-align:center;display:none}
+.cost-box .clbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.25rem}
+.cost-box .cval{font-size:32px;font-weight:800;color:#fff;line-height:1;margin-bottom:.2rem}
+.cost-box .cunit{font-size:12px;color:rgba(255,255,255,.55)}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:.65rem .85rem;background:#fff;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:.75rem}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dgrey)}
+.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.leg-dot.i{background:var(--lblue);border:2px solid var(--blue)}
+.leg-dot.r{background:var(--lgreen);border:2px solid var(--green)}
+
+/* FOOTER */
+.footer{text-align:center;padding:1.5rem .75rem;font-size:11px;color:#94A3B8}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="lang-bar">
+    <button class="lb on" onclick="setLang('ru')">RU</button>
+    <button class="lb" onclick="setLang('tj')">ТҶ</button>
+  </div>
+  <div class="hdr-inner">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 140" style="width:100%;max-width:340px;display:block;margin:0 auto">
+      <ellipse cx="99" cy="122" rx="52" ry="8" fill="rgba(0,0,0,0.2)"/>
+      <polygon points="45,38 135,16 168,38 78,60" fill="#8ABCD8"/>
+      <polygon points="45,38 45,115 135,93 135,16" fill="#5A92B8"/>
+      <polygon points="135,16 168,38 168,115 135,93" fill="#3A6A8A"/>
+      <ellipse cx="65" cy="65" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="82" cy="60" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="99" cy="56" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="116" cy="52" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="65" cy="80" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="82" cy="75" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="99" cy="71" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="116" cy="67" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="65" cy="95" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="82" cy="90" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="99" cy="86" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <ellipse cx="116" cy="82" rx="5" ry="4" fill="#1A3A5C" opacity=".5"/>
+      <line x1="185" y1="18" x2="185" y2="128" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+      <text x="195" y="58" font-family="Georgia,serif" font-size="36" font-weight="700" letter-spacing="3" fill="white">AAC</text>
+      <text x="195" y="88" font-family="Georgia,serif" font-size="28" font-weight="700" letter-spacing="2" fill="white">BLOCK</text>
+      <line x1="195" y1="96" x2="330" y2="96" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>
+      <text x="195" y="111" font-family="-apple-system,sans-serif" font-size="9" letter-spacing="2.5" fill="rgba(255,255,255,.6)">AERATED CONCRETE BLOCK</text>
+      <text x="195" y="126" font-family="-apple-system,sans-serif" font-size="8" letter-spacing="1.5" fill="rgba(255,255,255,.35)">GAYUR ECOBLOCK · TAJIKISTAN</text>
+    </svg>
+    <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:.3rem" id="hdr-sub"></div>
+  </div>
+</div>
+
+<div class="ios-hint" id="ios-hint">
+  <button class="ios-hint-close" onclick="this.parentElement.classList.remove('show')">✕</button>
+  <span id="ios-hint-text"></span>
+</div>
+
+<div class="wrap">
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot i"></div><span data-t="leg_inp"></span></div>
+  <div class="leg"><div class="leg-dot r"></div><span data-t="leg_res"></span></div>
+</div>
+
+<!-- ШАГ 1 -->
+<div class="sec" id="s1">
+  <div class="sec-hdr" onclick="tog('s1')">
+    <div class="sec-num">1</div><div class="sec-icon">🧱</div>
+    <div class="sec-title" data-t="step1_title"></div>
+    <div class="sec-arr open" id="s1a">▼</div>
+  </div>
+  <div class="sec-body open" id="s1b">
+    <div class="note blue" data-t="note_block"></div>
+    <div class="presets" id="presets">
+      <button class="preset" data-l="600" data-w="100" data-h="300">600×100×300</button>
+      <button class="preset" data-l="600" data-w="120" data-h="300">600×120×300</button>
+      <button class="preset" data-l="600" data-w="150" data-h="300">600×150×300</button>
+      <button class="preset on" data-l="600" data-w="200" data-h="300">600×200×300</button>
+      <button class="preset" data-l="600" data-w="250" data-h="300">600×250×300</button>
+      <button class="preset" data-l="600" data-w="300" data-h="300">600×300×300</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="field">
+        <label data-t="lbl_bl_w"></label>
+        <div class="iw"><input type="number" id="bW" value="200" min="1" inputmode="numeric"><div class="u">мм</div></div>
+        <div class="hint" data-t="hint_bl_w"></div>
+      </div>
+      <div class="field">
+        <label data-t="lbl_bl_h"></label>
+        <div class="iw"><input type="number" id="bH" value="300" min="1" inputmode="numeric"><div class="u">мм</div></div>
+        <div class="hint" data-t="hint_bl_h"></div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label data-t="lbl_bl_l" style="display:flex;align-items:center;gap:6px"><span class="badge" data-t="badge_fix"></span></label>
+      <div class="iw locked"><input type="number" id="bL" value="600" readonly><div class="u">мм</div></div>
+      <div class="hint" data-t="hint_bl_l_fixed"></div>
+    </div>
+    <div style="margin-top:.65rem;padding:.55rem .7rem;background:var(--grey);border-radius:7px;font-size:12px;color:var(--dgrey)">
+      <span data-t="vol_one_block"></span>: <strong id="bvol-disp" style="color:var(--navy)">—</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ШАГ 2 -->
+<div class="sec" id="s2">
+  <div class="sec-hdr" onclick="tog('s2')">
+    <div class="sec-num">2</div><div class="sec-icon">🚛</div>
+    <div class="sec-title" data-t="step2_title"></div>
+    <div class="sec-arr open" id="s2a">▼</div>
+  </div>
+  <div class="sec-body open" id="s2b">
+    <div class="field" style="margin-bottom:10px">
+      <label data-t="lbl_pal_vol"></label>
+      <div class="iw"><input type="number" id="palVol" value="1.728" step="0.001" min="0.1" inputmode="decimal"><div class="u">м³</div></div>
+      <div class="hint" data-t="hint_pal_vol"></div>
+    </div>
+    <div class="field">
+      <label data-t="lbl_pal_pcs"></label>
+      <div class="iw locked"><input type="text" id="palPcs" readonly><div class="u" data-t="unit_pcs"></div></div>
+      <div class="hint" data-t="hint_pal_auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ШАГ 3 -->
+<div class="sec" id="s3">
+  <div class="sec-hdr" onclick="tog('s3')">
+    <div class="sec-num">3</div><div class="sec-icon">🏗️</div>
+    <div class="sec-title" data-t="step3_title"></div>
+    <div class="sec-arr open" id="s3a">▼</div>
+  </div>
+  <div class="sec-body open" id="s3b">
+    <div class="tabs">
+      <div class="tab on" id="tab-a" onclick="setMode('a')" data-t="tab_a"></div>
+      <div class="tab" id="tab-b" onclick="setMode('b')" data-t="tab_b"></div>
+    </div>
+
+    <div id="mode-a">
+      <div class="note blue" data-t="note_mode_a"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+        <div class="field">
+          <label data-t="lbl_room_area"></label>
+          <div class="iw"><input type="number" id="rArea" placeholder="60" min="0" step="0.5" inputmode="decimal"><div class="u">м²</div></div>
+          <div class="hint" data-t="hint_room_area"></div>
+        </div>
+        <div class="field">
+          <label data-t="lbl_room_h"></label>
+          <div class="iw"><input type="number" id="rH" placeholder="3.0" min="0" step="0.1" inputmode="decimal"><div class="u">м</div></div>
+          <div class="hint" data-t="hint_room_h"></div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label data-t="lbl_room_perim"></label>
+        <div class="iw"><input type="number" id="rPerim" placeholder="—" min="0" step="0.1" inputmode="decimal"><div class="u">м</div></div>
+        <div class="hint" data-t="hint_room_perim"></div>
+      </div>
+      <div class="stat-row green">
+        <span data-t="lbl_perim_calc"></span>: <span id="perim-disp">—</span> м &nbsp;·&nbsp;
+        <span data-t="lbl_wall_area"></span>: <span id="warea-a-disp">—</span> м²
+      </div>
+    </div>
+
+    <div id="mode-b" style="display:none">
+      <div class="note blue" data-t="note_mode_b"></div>
+      <table class="ot"><thead id="walls-head"></thead><tbody id="walls-body"></tbody></table>
+      <button class="add-btn" onclick="addWall()">＋ <span data-t="btn_add_wall"></span></button>
+      <div class="stat-row green"><span data-t="lbl_total_wall"></span>: <span id="warea-b-disp">0.00</span> м²</div>
+    </div>
+  </div>
+</div>
+
+<!-- ШАГ 4 -->
+<div class="sec" id="s4">
+  <div class="sec-hdr" onclick="tog('s4')">
+    <div class="sec-num">4</div><div class="sec-icon">🚪</div>
+    <div class="sec-title" data-t="step4_title"></div>
+    <div class="sec-arr open" id="s4a">▼</div>
+  </div>
+  <div class="sec-body open" id="s4b">
+    <div class="note red" data-t="note_openings"></div>
+    <table class="ot"><thead id="open-head"></thead><tbody id="open-body"></tbody></table>
+    <button class="add-btn" onclick="addOpening()">＋ <span data-t="btn_add_open"></span></button>
+    <div class="stat-row red"><span data-t="lbl_open_sum"></span>: <span id="open-sum-disp">0.00</span> м²</div>
+  </div>
+</div>
+
+<!-- ШАГ 5 -->
+<div class="sec" id="s5">
+  <div class="sec-hdr" onclick="tog('s5')">
+    <div class="sec-num">5</div><div class="sec-icon">🔧</div>
+    <div class="sec-title" data-t="step5_title"></div>
+    <div class="sec-arr open" id="s5a">▼</div>
+  </div>
+  <div class="sec-body open" id="s5b">
+    <div class="note blue" data-t="note_waste"></div>
+    <div class="field">
+      <label data-t="lbl_waste"></label>
+      <div class="slider-wrap">
+        <input type="range" id="waste" min="0" max="20" value="5" step="1">
+        <div class="slider-val" id="waste-val">5%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ШАГ 6 -->
+<div class="sec" id="s6">
+  <div class="sec-hdr" onclick="tog('s6')">
+    <div class="sec-num">6</div><div class="sec-icon">💰</div>
+    <div class="sec-title" data-t="step6_title"></div>
+    <div class="sec-arr" id="s6a">▼</div>
+  </div>
+  <div class="sec-body" id="s6b">
+    <div class="note green" data-t="note_cost"></div>
+    <div class="field" style="margin-bottom:10px">
+      <label data-t="lbl_price_pcs"></label>
+      <div class="iw"><input type="number" id="prPcs" placeholder="—" min="0" inputmode="decimal"><div class="u" data-t="unit_smn"></div></div>
+    </div>
+    <div class="field">
+      <label data-t="lbl_price_m3"></label>
+      <div class="iw"><input type="number" id="prM3" placeholder="—" min="0" inputmode="decimal"><div class="u" data-t="unit_smn"></div></div>
+    </div>
+  </div>
+</div>
+
+<button class="go-btn" onclick="calc()"><span data-t="btn_calc"></span></button>
+
+<!-- RESULTS -->
+<div class="results" id="results">
+  <div class="res-grid">
+    <div class="rc g">
+      <div class="rc-icon">🔢</div>
+      <div class="rc-info">
+        <div class="rc-lbl" data-t="res_pcs_lbl"></div>
+        <div class="rc-val" id="r-pcs">—</div>
+        <div class="rc-unit" data-t="res_pcs_unit"></div>
+      </div>
+    </div>
+    <div class="rc">
+      <div class="rc-icon">📦</div>
+      <div class="rc-info">
+        <div class="rc-lbl" data-t="res_vol_lbl"></div>
+        <div class="rc-val" id="r-vol">—</div>
+        <div class="rc-unit">м³</div>
+      </div>
+    </div>
+    <div class="rc">
+      <div class="rc-icon">🚛</div>
+      <div class="rc-info">
+        <div class="rc-lbl" data-t="res_pal_lbl"></div>
+        <div class="rc-val" id="r-pal">—</div>
+        <div class="rc-unit" data-t="res_pal_unit"></div>
+        <div class="rc-sub" id="r-pal-rem"></div>
+      </div>
+    </div>
+  </div>
+  <div class="dtbl">
+    <table><thead><tr><th data-t="tbl_param"></th><th data-t="tbl_val"></th></tr></thead>
+    <tbody id="dtbody"></tbody></table>
+  </div>
+  <div class="cost-box" id="cost-box">
+    <div class="clbl" data-t="res_cost_lbl"></div>
+    <div class="cval" id="r-cost">—</div>
+    <div class="cunit" data-t="res_cost_unit"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="footer">
+  <strong>Gayur EcoBlock</strong> · <span data-t="footer_note"></span>
+</div>
+
+<script>
+const T = {
+  ru:{
+    leg_inp:'Синие поля — вводите данные', leg_res:'Зелёные — итоговый результат',
+    step1_title:'Размер газоблока', step2_title:'Паллет',
+    step3_title:'Стены — способ ввода', step4_title:'Проёмы (двери и окна)',
+    step5_title:'Запас на бой и подрезку', step6_title:'Стоимость (по желанию)',
+    tab_a:'🏠 Площадь помещения', tab_b:'📐 Стены вручную',
+    note_block:'Выберите стандартный размер или введите свой',
+    note_pallet:'Стандарт 1.728 м³ | Для блока 250 мм → 1.8 м³',
+    hint_pal_vol:'Стандарт 1.728 м³ · 250 мм → 1.8 м³',
+    note_mode_a:'Введите площадь пола и высоту — периметр считается сам',
+    note_mode_b:'Введите длину и высоту каждой стены',
+    note_openings:'Введите размеры дверей и окон — вычтутся автоматически',
+    note_waste:'Рекомендуется 5–10%',
+    note_cost:'Введите цену за штуку ИЛИ за м³',
+    lbl_bl_l:'Длина блока', lbl_bl_w:'Ширина (толщина)', lbl_bl_h:'Высота блока',
+    lbl_pal_vol:'Объём паллета', lbl_pal_pcs:'Блоков на паллете',
+    lbl_room_area:'Площадь помещения', lbl_room_h:'Высота стен',
+    lbl_room_perim:'Периметр (если знаете)',
+    lbl_waste:'Запас', lbl_price_pcs:'Цена за 1 блок', lbl_price_m3:'Цена за 1 м³',
+    hint_bl_l:'600 мм', hint_bl_l_fixed:'Стандарт 600 мм',
+    hint_bl_w:'100–400 мм', hint_bl_h:'Обычно 300 мм',
+    hint_pal_auto:'Считается автоматически',
+    hint_room_area:'Общая площадь комнат', hint_room_h:'Обычно 2.8–3.0 м',
+    hint_room_perim:'Если пусто — авто (4×√S)',
+    badge_fix:'ФИКС.',
+    btn_calc:'✅ Рассчитать', btn_add_wall:'Добавить стену', btn_add_open:'Добавить проём',
+    res_pcs_lbl:'Газоблоков', res_pcs_unit:'штук',
+    res_vol_lbl:'Объём', res_vol_unit:'кубометров',
+    res_pal_lbl:'Паллетов', res_pal_unit:'полных паллетов',
+    lbl_perim_calc:'Периметр', lbl_wall_area:'Площадь стен',
+    lbl_total_wall:'Итого стены', lbl_open_sum:'Итого проёмы',
+    tbl_param:'Параметр', tbl_val:'Значение',
+    res_cost_lbl:'Итоговая стоимость', res_cost_unit:'таджикских сомони',
+    footer_note:'Ориентировочный расчёт. Уточняйте у менеджера.',
+    vol_one_block:'Объём 1 блока',
+    unit_pcs:'шт', unit_smn:'смн',
+    hdr_sub:'Точный расчёт газоблоков',
+    wall_lbl:'Стена', open_lbl:'Проём',
+    th_name:'', th_len:'Длина м', th_h:'Высота м', th_area:'м²',
+    th_w:'Ширина м',
+    detail:['Площадь стен','Минус проёмы','Чистая площадь','Толщина кладки',
+      'Объём без запаса','Запас','Итого объём','Объём 1 блока',
+      'Блоков точно','Блоков (округл.)','Объём паллета',
+      'Блоков на паллете','Полных паллетов','Остаток (неполный паллет)','Итого паллетов'],
+    rem_full:'паллет ровный ✓', rem_extra:'+ ещё', rem_unit:'шт',
+    pcs_unit:'шт',
+    ios_hint:'📲 Добавьте на экран «Домой»: нажмите  в Safari → «На экран "Домой"»',
+  },
+  tj:{
+    leg_inp:'Майдонҳои кабуд — маълумот ворид кунед', leg_res:'Майдонҳои сабз — натиҷа',
+    step1_title:'Андозаи газоблок', step2_title:'Паллет',
+    step3_title:'Деворҳо — усули ворид', step4_title:'Кушодагиҳо (дар ва тиреза)',
+    step5_title:'Захира барои брак', step6_title:'Нарх (ихтиёрӣ)',
+    tab_a:'🏠 Масоҳати хона', tab_b:'📐 Деворҳо дастӣ',
+    note_block:'Андозаи стандартиро интихоб кунед ё худ ворид кунед',
+    note_pallet:'Стандарт 1.728 м³ | Барои 250 мм → 1.8 м³',
+    hint_pal_vol:'Стандарт 1.728 м³ · 250 мм → 1.8 м³',
+    note_mode_a:'Масоҳати кафш ва баландии деворро ворид кунед',
+    note_mode_b:'Дарозӣ ва баландии ҳар деворро ворид кунед',
+    note_openings:'Андозаи дарҳо ва тирезаҳоро ворид кунед',
+    note_waste:'Тавсия 5–10%',
+    note_cost:'Нархи 1 блок ё 1 м³ ворид кунед',
+    lbl_bl_l:'Дарозии блок', lbl_bl_w:'Паҳно (ғафсӣ)', lbl_bl_h:'Баландии блок',
+    lbl_pal_vol:'Ҳаҷми паллет', lbl_pal_pcs:'Блокҳо дар паллет',
+    lbl_room_area:'Масоҳати хона', lbl_room_h:'Баландии деворҳо',
+    lbl_room_perim:'Периметр (агар медонед)',
+    lbl_waste:'Захира', lbl_price_pcs:'Нарх барои 1 блок', lbl_price_m3:'Нарх барои 1 м³',
+    hint_bl_l:'600 мм', hint_bl_l_fixed:'Стандарт 600 мм',
+    hint_bl_w:'100–400 мм', hint_bl_h:'Одатан 300 мм',
+    hint_pal_auto:'Автоматӣ ҳисоб мешавад',
+    hint_room_area:'Масоҳати умумии утоқҳо', hint_room_h:'Одатан 2.8–3.0 м',
+    hint_room_perim:'Агар холӣ — авто (4×√S)',
+    badge_fix:'ФИКС.',
+    btn_calc:'✅ Ҳисоб кардан', btn_add_wall:'Девор илова кардан', btn_add_open:'Кушодагӣ илова кардан',
+    res_pcs_lbl:'Газоблокҳо', res_pcs_unit:'дона',
+    res_vol_lbl:'Ҳаҷм', res_vol_unit:'метри мукааб',
+    res_pal_lbl:'Паллетҳо', res_pal_unit:'паллети пурра',
+    lbl_perim_calc:'Периметр', lbl_wall_area:'Масоҳати деворҳо',
+    lbl_total_wall:'Ҷамъи деворҳо', lbl_open_sum:'Ҷамъи кушодагиҳо',
+    tbl_param:'Параметр', tbl_val:'Арзиш',
+    res_cost_lbl:'Нархи ниҳоӣ', res_cost_unit:'сомонии тоҷикӣ',
+    footer_note:'Ҳисоби тахминӣ. Бо менеҷер тасдиқ кунед.',
+    vol_one_block:'Ҳаҷми 1 блок',
+    unit_pcs:'дона', unit_smn:'смн',
+    hdr_sub:'Ҳисоби дақиқи газоблок',
+    wall_lbl:'Девор', open_lbl:'Кушодагӣ',
+    th_name:'', th_len:'Дарозӣ м', th_h:'Баландӣ м', th_area:'м²',
+    th_w:'Паҳно м',
+    detail:['Масоҳати деворҳо','Минус кушодагиҳо','Масоҳати холис','Ғафсии кладка',
+      'Ҳаҷм бе захира','Захира','Ҳаҷми умумӣ','Ҳаҷми 1 блок',
+      'Блокҳои дақиқ','Блокҳо (гирдкунӣ)','Ҳаҷми паллет',
+      'Блок дар паллет','Паллетҳои пурра','Боқимонда','Ҷамъи паллетҳо'],
+    rem_full:'паллет пурра ✓', rem_extra:'+ боз', rem_unit:'дона',
+    pcs_unit:'дона',
+    ios_hint:'📲 Ба экрани асосӣ илова кунед: тугмаи  дар Safari → «Ба экрани асосӣ»',
+  }
+};
+
+let lang = 'ru', mode = 'a', wCount = 0, oCount = 0, wallRows = [], openRows = [];
+
+function t(k){ return T[lang][k] || T.ru[k] || k; }
+
+function applyLang(){
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    const k = el.getAttribute('data-t');
+    const v = T[lang][k];
+    if(v !== undefined) el.textContent = v;
+  });
+  // rebuild table headers
+  document.getElementById('walls-head').innerHTML =
+    `<tr><th>${t('th_name')}</th><th>${t('th_len')}</th><th>${t('th_h')}</th><th>${t('th_area')}</th><th></th></tr>`;
+  document.getElementById('open-head').innerHTML =
+    `<tr><th>${t('th_name')}</th><th>${t('th_w')}</th><th>${t('th_h')}</th><th>${t('th_area')}</th><th></th></tr>`;
+  // update wall/opening labels in existing rows
+  document.querySelectorAll('#walls-body tr').forEach((tr,i)=>{
+    tr.querySelector('td').textContent = t('wall_lbl')+' №'+(i+1);
+  });
+  document.querySelectorAll('#open-body tr').forEach((tr,i)=>{
+    tr.querySelector('td').textContent = defOpenNames()[i] || t('open_lbl')+' №'+(i+1);
+  });
+  updateInfo();
+  const res = document.getElementById('results');
+  if(res.classList.contains('show')) calc();
+}
+
+function setLang(l){
+  lang = l;
+  document.querySelectorAll('.lb').forEach(b=> b.classList.toggle('on', (l==='ru'?'RU':'ТҶ') === b.textContent.trim()));
+  applyLang();
+}
+
+function defOpenNames(){
+  const d = lang==='ru'
+    ? ['Дверь №1','Дверь №2','Окно №1','Окно №2','Окно №3']
+    : ['Дари №1','Дари №2','Тиреза №1','Тиреза №2','Тиреза №3'];
+  return d;
+}
+
+// TOGGLE SECTIONS
+function tog(id){
+  const body = document.getElementById(id+'b');
+  const arr  = document.getElementById(id+'a');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  body.style.display = isOpen ? 'none' : 'block';
+  arr.classList.toggle('open', !isOpen);
+}
+// init display
+['s1b','s2b','s3b','s4b','s5b'].forEach(id=>{document.getElementById(id).style.display='block';});
+document.getElementById('s6b').style.display='none';
+
+// PRESETS
+document.querySelectorAll('.preset').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.preset').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('bW').value = btn.dataset.w;
+    document.getElementById('bH').value = btn.dataset.h;
+    updateInfo();
+  });
+});
+['bW','bH'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('on'));
+  updateInfo();
+}));
+
+function bVol(){
+  return (+document.getElementById('bL').value||0)*(+document.getElementById('bW').value||0)*(+document.getElementById('bH').value||0)/1e9;
+}
+function updateInfo(){
+  const v = bVol();
+  document.getElementById('bvol-disp').textContent = v>0 ? v.toFixed(5)+' м³' : '—';
+  const pv = +document.getElementById('palVol').value||0;
+  document.getElementById('palPcs').value = (v>0&&pv>0) ? Math.floor(pv/v) : '—';
+}
+document.getElementById('palVol').addEventListener('input', updateInfo);
+
+// MODE
+function setMode(m){
+  mode = m;
+  document.getElementById('tab-a').classList.toggle('on', m==='a');
+  document.getElementById('tab-b').classList.toggle('on', m==='b');
+  document.getElementById('mode-a').style.display = m==='a'?'block':'none';
+  document.getElementById('mode-b').style.display = m==='b'?'block':'none';
+}
+
+// LIVE TOTALS
+function wallAreaA(){
+  const S = +document.getElementById('rArea').value||0;
+  const H = +document.getElementById('rH').value||0;
+  const PM = +document.getElementById('rPerim').value||0;
+  const P = PM>0 ? PM : (S>0 ? 4*Math.sqrt(S) : 0);
+  document.getElementById('perim-disp').textContent = P>0 ? P.toFixed(2) : '—';
+  const wa = P*H;
+  document.getElementById('warea-a-disp').textContent = wa>0 ? wa.toFixed(2) : '—';
+  return wa;
+}
+function wallAreaB(){
+  let s=0;
+  wallRows.forEach(i=>{
+    const l=+document.getElementById('wL'+i)?.value||0;
+    const h=+document.getElementById('wH'+i)?.value||0;
+    if(l>0&&h>0) s+=l*h;
+  });
+  document.getElementById('warea-b-disp').textContent=s.toFixed(2);
+  return s;
+}
+function openSum(){
+  let s=0;
+  openRows.forEach(i=>{
+    const w=+document.getElementById('oW'+i)?.value||0;
+    const h=+document.getElementById('oH'+i)?.value||0;
+    if(w>0&&h>0) s+=w*h;
+  });
+  document.getElementById('open-sum-disp').textContent=s.toFixed(2);
+  return s;
+}
+function updTotals(){ wallAreaA(); wallAreaB(); openSum(); }
+['rArea','rH','rPerim'].forEach(id=>document.getElementById(id).addEventListener('input',updTotals));
+document.getElementById('waste').addEventListener('input',()=>{
+  document.getElementById('waste-val').textContent=document.getElementById('waste').value+'%';
+});
+
+// ADD WALL
+function addWall(defL, defH){
+  wCount++;
+  const i=wCount;
+  const tr=document.createElement('tr');
+  tr.id='wall-'+i;
+  tr.innerHTML=`<td>${t('wall_lbl')} №${i}</td>
+    <td><input type="number" id="wL${i}" value="${defL||''}" placeholder="0" min="0" step="0.1" inputmode="decimal" oninput="updWall(${i})"></td>
+    <td><input type="number" id="wH${i}" value="${defH||''}" placeholder="0" min="0" step="0.1" inputmode="decimal" oninput="updWall(${i})"></td>
+    <td class="area-cell" id="wA${i}">—</td>
+    <td><button class="del" onclick="delRow('wall-'+${i},'w')">✕</button></td>`;
+  document.getElementById('walls-body').appendChild(tr);
+  wallRows.push(i); updWall(i);
+}
+function updWall(i){
+  const l=+document.getElementById('wL'+i)?.value||0;
+  const h=+document.getElementById('wH'+i)?.value||0;
+  const el=document.getElementById('wA'+i);
+  if(el) el.textContent=(l>0&&h>0)?(l*h).toFixed(2):'—';
+  wallAreaB();
+}
+
+// ADD OPENING
+function addOpening(name,defW,defH){
+  oCount++;
+  const i=oCount;
+  const names=defOpenNames();
+  const nm=name||(names[i-1]||t('open_lbl')+' №'+i);
+  const tr=document.createElement('tr');
+  tr.id='open-'+i;
+  tr.innerHTML=`<td>${nm}</td>
+    <td><input type="number" id="oW${i}" value="${defW||''}" placeholder="0" min="0" step="0.01" inputmode="decimal" oninput="updOpen(${i})"></td>
+    <td><input type="number" id="oH${i}" value="${defH||''}" placeholder="0" min="0" step="0.01" inputmode="decimal" oninput="updOpen(${i})"></td>
+    <td class="area-cell" id="oA${i}">—</td>
+    <td><button class="del" onclick="delRow('open-'+${i},'o')">✕</button></td>`;
+  document.getElementById('open-body').appendChild(tr);
+  openRows.push(i); updOpen(i);
+}
+function updOpen(i){
+  const w=+document.getElementById('oW'+i)?.value||0;
+  const h=+document.getElementById('oH'+i)?.value||0;
+  const el=document.getElementById('oA'+i);
+  if(el) el.textContent=(w>0&&h>0)?(w*h).toFixed(2):'—';
+  openSum();
+}
+function delRow(id,type){
+  const tr=document.getElementById(id); if(tr) tr.remove();
+  if(type==='w') wallRows=wallRows.filter(i=>document.getElementById('wL'+i));
+  else openRows=openRows.filter(i=>document.getElementById('oW'+i));
+  updTotals();
+}
+
+// CALCULATE
+function calc(){
+  const bv  = bVol();
+  const bw  = (+document.getElementById('bW').value||0)/1000;
+  const pv  = +document.getElementById('palVol').value||0;
+  const waste = +document.getElementById('waste').value||0;
+
+  const wa = mode==='a' ? wallAreaA() : wallAreaB();
+  const oa = openSum();
+  const net = Math.max(0, wa - oa);
+  const nv  = net * bw;
+  const wv  = nv * waste/100;
+  const fv  = nv + wv;
+  const pcs = bv>0 ? Math.ceil(fv/bv) : 0;
+  const palE = pv>0 ? fv/pv : 0;
+  const palF = Math.floor(palE);
+  const remPcs = bv>0 ? Math.round((palE-palF)*pv/bv) : 0;
+
+  document.getElementById('r-pcs').textContent = pcs.toLocaleString('ru');
+  document.getElementById('r-vol').textContent = fv.toFixed(3);
+  document.getElementById('r-pal').textContent = palF;
+
+  const remEl = document.getElementById('r-pal-rem');
+  remEl.textContent = remPcs>0 ? t('rem_extra')+' '+remPcs+' '+t('rem_unit') : t('rem_full');
+
+  const pu = t('pcs_unit');
+  const dr = t('detail');
+  const rows=[
+    [dr[0],  wa.toFixed(2)+' м²', ''],
+    [dr[1],  '−'+oa.toFixed(2)+' м²', ''],
+    [dr[2],  net.toFixed(2)+' м²', 'sub'],
+    [dr[3],  (bw*100).toFixed(0)+' см', ''],
+    [dr[4],  nv.toFixed(3)+' м³', ''],
+    [dr[5],  '+'+wv.toFixed(3)+' м³ ('+waste+'%)', ''],
+    [dr[6],  fv.toFixed(3)+' м³', 'sub'],
+    [dr[7],  bv.toFixed(5)+' м³', ''],
+    [dr[8],  (fv/bv).toFixed(1)+' '+pu, ''],
+    [dr[9],  pcs.toLocaleString('ru')+' '+pu, 'tot'],
+    [dr[10], pv.toFixed(3)+' м³', ''],
+    [dr[11], Math.floor(pv/bv)+' '+pu, ''],
+    [dr[12], palF+' '+pu, 'sub'],
+    [dr[13], remPcs>0 ? remPcs+' '+pu : '0 ✓', ''],
+    [dr[14], (remPcs>0?palF+1:palF)+' '+pu, 'tot'],
+  ];
+  document.getElementById('dtbody').innerHTML=rows.map(([l,v,c])=>
+    `<tr class="${c}"><td>${l}</td><td>${v}</td></tr>`).join('');
+
+  const prP = +document.getElementById('prPcs').value||0;
+  const prM = +document.getElementById('prM3').value||0;
+  const cost = prP>0 ? pcs*prP : prM>0 ? fv*prM : 0;
+  const cb = document.getElementById('cost-box');
+  if(cost>0){
+    document.getElementById('r-cost').textContent = cost.toLocaleString('ru',{maximumFractionDigits:2});
+    cb.style.display='block';
+  } else { cb.style.display='none'; }
+
+  const res=document.getElementById('results');
+  res.classList.add('show');
+  setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+// IOS HINT
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone;
+if(isIOS){
+  setTimeout(()=>{
+    const h=document.getElementById('ios-hint');
+    document.getElementById('ios-hint-text').textContent = T[lang].ios_hint;
+    h.classList.add('show');
+  }, 2500);
+}
+
+// INIT
+applyLang();
+addWall(8,3); addWall(5,3); addWall(8,3); addWall(5,3);
+[['Дверь №1',0.9,2.0],['Дверь №2',0.9,2.0],['Окно №1',1.4,1.4],['Окно №2',1.4,1.4],['Окно №3',1.4,1.4]]
+  .forEach(([n,w,h])=>addOpening(n,w,h));
+updateInfo();
+</script>
+</body>
+</html>
